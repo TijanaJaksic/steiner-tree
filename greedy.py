@@ -176,6 +176,36 @@ class Graph:
             for neighbour in self.adj_list[vertice]:
                 print(neighbour, end = " ")
     
+    def is_cyclic_help(self,v,parent,visited):
+        visited.add(v)
+        for (i,w) in self.steiner_tree.adj_list[v]:
+            if not i in visited:
+                if self.is_cyclic_help(i,v,visited):
+                    return True
+            elif parent != i:
+                return True
+        return False
+    
+    def is_steiner_tree_valid(self):
+        visited = set()
+
+        for i in self.steiner_tree.vertices:
+            if not i in visited:
+                if self.is_cyclic_help(i,-1,visited) == True:
+                    print("nasli smo ciklus")
+                    return False #jer smo nasli ciklus
+        #ako smo stigli do ovde, nema ciklusa
+        if len(visited) != self.steiner_tree.num_vertices:
+            print("stablo nije povezano")
+            return False #jer u DFS-u nismo posetili sve pa stavlo nije povezano
+        for t in self.terminals:
+            if not t in visited:
+                print("t nije u stein stablu")
+                return False
+        return True
+
+
+
 class Steiner:
     def __init__(self):
         self.num_vertices = 0
@@ -192,6 +222,7 @@ class Steiner:
             return
         self.vertices.add(num)
         self.adj_list[num] = []
+        self.num_vertices += 1
 
     def add_edge(self, v1, v2, w):
         if not v1 in self.vertices:
@@ -253,6 +284,8 @@ with open('test.txt', 'r') as f:
     #g.add_path_to_stein_tree(0, 5)
     #g.steiner_tree.print()
     
+
+print(g.is_steiner_tree_valid())
 #nacrtaj ucitano:
 #mpl_draw(g.graph)
 
