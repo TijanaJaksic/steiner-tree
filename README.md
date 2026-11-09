@@ -1,6 +1,6 @@
 # steiner-tree
 
-A Python implementation of a shortest-path heuristic for the Steiner tree problem in graphs.
+A Python implementation of a shortest-path heuristic (Takahashi–Matsuyama) for the Steiner tree problem in graphs.
 
 ## Problem
 
