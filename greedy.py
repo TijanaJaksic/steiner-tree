@@ -2,6 +2,7 @@ import sys
 import numpy as np
 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 import rustworkx as rx
 from rustworkx.visualization import mpl_draw
@@ -131,6 +132,70 @@ class Graph:
             terminals_set.remove(t)
             self.add_path_to_stein_tree(s, t)
 
+        self.steiner_tree_found = True
+
+    #ukupna tezina stajnerovog stabla
+    def steiner_tree_weight(self):
+        return sum(self.adj_matrix[u][v] for (u, v) in self.steiner_tree.edges)
+
+    #crta ceo graf i istice stajnerovo stablo
+    #terminali - crveni, stajnerovi cvorovi - narandzasti, ostali - sivi
+    #grane stabla - debele crne, ostale - tanke svetlo sive
+    def draw_steiner_tree(self, filename=None, show=True, seed=42):
+        self.find_steiner_tree()
+
+        pos = rx.spring_layout(self.graph, seed=seed)
+
+        node_colors = []
+        for v in self.graph.node_indices():
+            if v in self.terminals:
+                node_colors.append("tab:red")
+            elif v in self.steiner_tree.vertices:
+                node_colors.append("tab:orange")
+            else:
+                node_colors.append("lightgray")
+
+        tree_edges = set(self.steiner_tree.edges)
+        edge_colors = []
+        edge_widths = []
+        for (u, v) in self.graph.edge_list(): #isti redosled kao u mpl_draw
+            if (min(u, v), max(u, v)) in tree_edges:
+                edge_colors.append("black")
+                edge_widths.append(3.0)
+            else:
+                edge_colors.append("lightgray")
+                edge_widths.append(1.0)
+
+        fig, ax = plt.subplots(figsize=(8, 6))
+        mpl_draw(
+            self.graph,
+            pos=pos,
+            ax=ax,
+            with_labels=True,
+            labels=lambda n: str(n + 1), #1-indeksirano, kao u ulaznom fajlu
+            edge_labels=lambda w: str(int(w)),
+            node_color=node_colors,
+            edge_color=edge_colors,
+            width=edge_widths,
+            node_size=500,
+        )
+
+        legend = [
+            Line2D([0], [0], marker='o', color='w', markerfacecolor='tab:red', markersize=12, label='terminal'),
+            Line2D([0], [0], marker='o', color='w', markerfacecolor='tab:orange', markersize=12, label='Steiner vertex'),
+            Line2D([0], [0], marker='o', color='w', markerfacecolor='lightgray', markersize=12, label='other vertex'),
+            Line2D([0], [0], color='black', lw=3, label='tree edge'),
+        ]
+        ax.legend(handles=legend, loc='best')
+        ax.set_title(f"Steiner tree, weight = {self.steiner_tree_weight():g}")
+        ax.set_axis_off()
+
+        if filename is not None:
+            fig.savefig(filename, dpi=150, bbox_inches='tight')
+        if show:
+            plt.show()
+        return fig, ax
+
     #dodajemo najkraci put izm v1 i v2 u stajnerovo stablo
     def add_path_to_stein_tree(self, v1, v2):#################################################################################
         if v1 == v2:
@@ -253,8 +318,25 @@ class Steiner:
             for neighbour in self.adj_list[vertice]:
                 print(neighbour, end = " ")
 
+#upotreba: python greedy.py [ulazni_fajl] [--save slika.png] [--no-show]
+input_file = 'test.txt'
+save_file = None
+show = True
+args = sys.argv[1:]
+i = 0
+while i < len(args):
+    if args[i] == '--save':
+        save_file = args[i+1]
+        i += 2
+        continue
+    if args[i] == '--no-show':
+        show = False
+    else:
+        input_file = args[i]
+    i += 1
+
 #ucitavamo graf iz fajla
-with open('test.txt', 'r') as f:
+with open(input_file, 'r') as f:
     while True:
         line = f.readline()
         if not line:
@@ -273,20 +355,12 @@ with open('test.txt', 'r') as f:
         if x[0] == 'T':
             g.add_terminal(int(x[1])-1)
 
-    g.find_steiner_tree()
-    g.steiner_tree.print()
-    print(g.terminals)
-
-    #g.print()
-    #g.min_paths()
-    #g.min_distances()
-
-    #g.add_path_to_stein_tree(0, 5)
-    #g.steiner_tree.print()
-    
-
+g.find_steiner_tree()
+g.steiner_tree.print()
+print()
+print(g.terminals)
+print("weight:", g.steiner_tree_weight())
 print(g.is_steiner_tree_valid())
-#nacrtaj ucitano:
-#mpl_draw(g.graph)
 
-#plt.show()
+#nacrtaj stajnerovo stablo:
+g.draw_steiner_tree(filename=save_file, show=show)

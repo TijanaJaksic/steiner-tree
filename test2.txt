@@ -1,0 +1,37 @@
+33D32945 STP File, STP Format Version 1.0
+
+SECTION Comment
+Name    "TEST2"
+Creator "Tijana"
+Remark  "Greedy is suboptimal: the hub (vertex 5) is cheaper than the terminal cycle"
+END
+
+SECTION Graph
+Nodes 10
+Edges 15
+E 1 2 5
+E 2 3 5
+E 3 4 5
+E 4 1 5
+E 5 1 3
+E 5 2 3
+E 5 3 3
+E 5 4 3
+E 4 6 9
+E 6 7 2
+E 7 8 2
+E 8 3 3
+E 1 9 1
+E 9 10 1
+E 10 2 10
+END
+
+SECTION Terminals
+Terminals 5
+T 1
+T 2
+T 3
+T 4
+T 6
+END
+
